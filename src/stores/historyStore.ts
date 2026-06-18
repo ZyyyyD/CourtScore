@@ -22,18 +22,23 @@ export const useHistoryStore = create<HistoryState>()((set) => ({
   loadHistory: async (userId) => {
     set({ isLoading: true });
     try {
+      const { data: playerRows } = await supabase
+        .from('match_players')
+        .select('match_id')
+        .eq('player_id', userId);
+
+      const matchIds = (playerRows ?? []).map((r) => r.match_id as string);
+
+      if (matchIds.length === 0) {
+        set({ matches: [] });
+        return;
+      }
+
       const { data } = await supabase
         .from('matches')
         .select('*, match_players(*), match_events(*)')
         .eq('status', 'completed')
-        .in(
-          'id',
-          // Only matches where this user participated
-          supabase
-            .from('match_players')
-            .select('match_id')
-            .eq('player_id', userId) as unknown as string[],
-        )
+        .in('id', matchIds)
         .order('completed_at', { ascending: false })
         .limit(50);
 

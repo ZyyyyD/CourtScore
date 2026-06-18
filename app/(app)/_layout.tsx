@@ -28,11 +28,11 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="create-match"
+        name="challenges"
         options={{
-          title: 'CREATE',
+          title: 'CHALLENGE',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
+            <Ionicons name="trophy-outline" size={size} color={color} />
           ),
         }}
       />
@@ -43,6 +43,12 @@ export default function AppLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="enter-outline" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="create-match"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen

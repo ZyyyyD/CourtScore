@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, type TextInputProps } from 'react-native';
-import { Colors } from '../../theme/colors';
-import { Typography } from '../../theme/typography';
-import { BorderRadius, Spacing } from '../../theme/spacing';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  type TextInputProps,
+} from "react-native";
+import { Colors } from "../../theme/colors";
+import { Typography } from "../../theme/typography";
+import { BorderRadius, Spacing } from "../../theme/spacing";
 
 interface Props extends TextInputProps {
   label?: string;
@@ -24,8 +30,14 @@ export function Input({ label, error, style, ...rest }: Props) {
           style,
         ]}
         placeholderTextColor={Colors.outline}
-        onFocus={(e) => { setFocused(true); rest.onFocus?.(e); }}
-        onBlur={(e)  => { setFocused(false); rest.onBlur?.(e); }}
+        onFocus={(e) => {
+          setFocused(true);
+          rest.onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          rest.onBlur?.(e);
+        }}
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </View>

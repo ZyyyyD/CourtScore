@@ -16,6 +16,7 @@ import { useAuthStore } from '../../../src/stores/authStore';
 import { useMatchStore } from '../../../src/stores/matchStore';
 import { useLiveMatch } from '../../../src/hooks/useLiveMatch';
 import { getPlayerName } from '../../../src/lib/pickleball';
+import { supabase } from '../../../src/lib/supabase';
 import type { ShotType, TeamSide } from '../../../src/types/match';
 
 export default function LiveMatchScreen() {
@@ -34,6 +35,7 @@ export default function LiveMatchScreen() {
 
   const sheetRef = useRef<BottomSheet>(null);
   const [pendingSide, setPendingSide] = useState<TeamSide | null>(null);
+  const [profilesMap, setProfilesMap] = useState<Record<string, string>>({});
 
   // Subscribe to real-time updates
   useLiveMatch(matchId);
@@ -42,8 +44,34 @@ export default function LiveMatchScreen() {
   const myPlayer = players.find((p) => p.player_id === userId);
   const mySide: TeamSide = myPlayer?.team_side ?? 'team_a';
 
-  const nameA = getPlayerName(players, 'team_a', userId === players.find((p) => p.team_side === 'team_a')?.player_id ? (isGuest ? guestName : user?.user_metadata?.full_name) : null);
-  const nameB = getPlayerName(players, 'team_b', userId === players.find((p) => p.team_side === 'team_b')?.player_id ? (isGuest ? guestName : user?.user_metadata?.full_name) : null);
+  useEffect(() => {
+    const ids = players
+      .map((p) => p.player_id)
+      .filter((id): id is string => !!id && id !== userId);
+    if (ids.length === 0) return;
+    supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', ids)
+      .then(({ data }) => {
+        const map: Record<string, string> = {};
+        for (const p of data ?? []) {
+          if (p.full_name) map[p.id] = p.full_name;
+        }
+        setProfilesMap(map);
+      });
+  }, [players.length]);
+
+  const resolveName = (side: TeamSide): string | null => {
+    const p = players.find((pl) => pl.team_side === side);
+    if (!p) return null;
+    if (p.player_id === userId) return isGuest ? guestName : (user?.user_metadata?.full_name ?? null);
+    if (p.player_id && profilesMap[p.player_id]) return profilesMap[p.player_id];
+    return null;
+  };
+
+  const nameA = getPlayerName(players, 'team_a', resolveName('team_a'));
+  const nameB = getPlayerName(players, 'team_b', resolveName('team_b'));
 
   // Navigate to summary when match is over
   useEffect(() => {

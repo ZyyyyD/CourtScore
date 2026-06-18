@@ -1,48 +1,63 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { router } from 'expo-router';
-import { ScreenWrapper } from '../../src/components/layout/ScreenWrapper';
-import { Header } from '../../src/components/layout/Header';
-import { Input } from '../../src/components/ui/Input';
-import { Button } from '../../src/components/ui/Button';
-import { Colors } from '../../src/theme/colors';
-import { Typography } from '../../src/theme/typography';
-import { Spacing } from '../../src/theme/spacing';
-import { useAuthStore } from '../../src/stores/authStore';
-import { useMatchStore } from '../../src/stores/matchStore';
-import { joinMatch } from '../../src/hooks/useMatch';
-import { isValidMatchCode } from '../../src/utils';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { router } from "expo-router";
+import { ScreenWrapper } from "../../src/components/layout/ScreenWrapper";
+import { Header } from "../../src/components/layout/Header";
+import { Input } from "../../src/components/ui/Input";
+import { Button } from "../../src/components/ui/Button";
+import { Colors } from "../../src/theme/colors";
+import { Typography } from "../../src/theme/typography";
+import { Spacing } from "../../src/theme/spacing";
+import { useAuthStore } from "../../src/stores/authStore";
+import { useMatchStore } from "../../src/stores/matchStore";
+import { joinMatch } from "../../src/hooks/useMatch";
+import { isValidMatchCode } from "../../src/utils";
 
 export default function JoinMatchScreen() {
   const { user, isGuest, guestName } = useAuthStore();
   const { setMyTeamSide } = useMatchStore();
-  const [suffix, setSuffix] = useState('');
-  const [error, setError] = useState('');
+  const [suffix, setSuffix] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const code = suffix.length > 0 ? `PKL-${suffix}` : 'PKL-';
+  const code = suffix.length > 0 ? `PKL-${suffix}` : "PKL-";
 
   const handleCodeChange = (val: string) => {
-    setError('');
+    setError("");
     // Strip any PKL- prefix the user might paste or type, keep only the 4-char suffix
-    const clean = val.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/^PKL/i, '').slice(0, 4);
+    const clean = val
+      .replace(/[^A-Z0-9]/gi, "")
+      .toUpperCase()
+      .replace(/^PKL/i, "")
+      .slice(0, 4);
     setSuffix(clean);
   };
 
   const handleJoin = async () => {
     if (!isValidMatchCode(code)) {
-      setError('Enter a valid code like PKL-1234');
+      setError("Enter a valid code like PKL-1234");
       return;
     }
     setLoading(true);
-    const result = await joinMatch(code, user?.id ?? null, isGuest ? guestName : null);
+    const result = await joinMatch(
+      code,
+      user?.id ?? null,
+      isGuest ? guestName : null,
+    );
     setLoading(false);
 
-    if ('error' in result) {
+    if ("error" in result) {
       setError(result.error);
       return;
     }
-    setMyTeamSide('team_b');
+    setMyTeamSide("team_b");
     router.push(`/(match)/lobby/${result.matchId}` as never);
   };
 
@@ -51,8 +66,7 @@ export default function JoinMatchScreen() {
       <Header title="Join Match" showBack={false} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+        behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={styles.content}>
           <Text style={styles.label}>ENTER MATCH CODE</Text>
           <View style={styles.codeRow}>
@@ -65,6 +79,8 @@ export default function JoinMatchScreen() {
               error={error}
               placeholder="XXXX"
               style={styles.codeInput}
+              multiline={false}
+              scrollEnabled={false}
             />
           </View>
           <Text style={styles.hint}>
@@ -87,9 +103,19 @@ export default function JoinMatchScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, padding: Spacing.lg, gap: Spacing.md, justifyContent: 'center' },
-  label:   { ...Typography.labelCaps, color: Colors.onSurfaceVariant },
-  codeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  content: {
+    flex: 1,
+    padding: Spacing.lg,
+    gap: Spacing.md,
+    justifyContent: "center",
+  },
+  label: { ...Typography.labelCaps, color: Colors.onSurfaceVariant },
+  codeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    justifyContent: "center",
+  },
   codePrefix: {
     ...Typography.headlineMd,
     color: Colors.onSurfaceVariant,
@@ -97,13 +123,17 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
   },
   codeInput: {
-    flex: 1,
+    width: 140,
     ...Typography.headlineMd,
     letterSpacing: 4,
-    textAlign: 'center',
+    textAlign: "center",
     height: 72,
     fontSize: 28,
   },
-  hint: { ...Typography.bodyMd, color: Colors.onSurfaceVariant, textAlign: 'center' },
+  hint: {
+    ...Typography.bodyMd,
+    color: Colors.onSurfaceVariant,
+    textAlign: "center",
+  },
   footer: { padding: Spacing.lg },
 });

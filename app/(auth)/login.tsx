@@ -26,16 +26,29 @@ export default function LoginScreen() {
       return;
     }
     setLoading(true);
-    const err = mode === 'login'
-      ? await signIn(email, password)
-      : await signUp(email, password, displayName || 'Player');
-    setLoading(false);
 
-    if (err) {
-      Alert.alert('Error', err);
-      return;
+    if (mode === 'login') {
+      const err = await signIn(email, password);
+      setLoading(false);
+      if (err) { Alert.alert('Error', err); return; }
+      router.replace('/(app)/home');
+    } else {
+      const err = await signUp(email, password, displayName || email.split('@')[0]);
+      setLoading(false);
+      if (err) { Alert.alert('Error', err); return; }
+
+      const { session } = useAuthStore.getState();
+      if (!session) {
+        // Email confirmation required — don't navigate yet
+        Alert.alert(
+          'Check your email',
+          'We sent a confirmation link to ' + email + '. Click it to activate your account, then log in.',
+          [{ text: 'OK', onPress: () => setMode('login') }],
+        );
+        return;
+      }
+      router.replace('/(app)/home');
     }
-    router.replace('/(app)/home');
   };
 
   return (
