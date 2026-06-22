@@ -4,6 +4,8 @@ import Animated, {
   useSharedValue,
   withSequence,
   withSpring,
+  withRepeat,
+  withTiming,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Colors } from '../../theme/colors';
@@ -55,6 +57,37 @@ function ScoreTile({
   );
 }
 
+function AnimatedVS() {
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.18, { duration: 700 }),
+        withTiming(1.0, { duration: 700 }),
+      ),
+      -1,
+      false,
+    );
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.5, { duration: 700 }),
+        withTiming(1.0, { duration: 700 }),
+      ),
+      -1,
+      false,
+    );
+  }, []);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return <Animated.Text style={[styles.vs, animStyle]}>VS</Animated.Text>;
+}
+
 export function ScoreBoard({ scoreA, scoreB, nameA, nameB, serverSide, scoringTarget }: Props) {
   return (
     <View style={styles.container}>
@@ -65,7 +98,7 @@ export function ScoreBoard({ scoreA, scoreB, nameA, nameB, serverSide, scoringTa
           isServer={serverSide === 'team_a'}
           onScoreChange={scoreA}
         />
-        <Text style={styles.divider}>—</Text>
+        <AnimatedVS />
         <ScoreTile
           score={scoreB}
           name={nameB}
@@ -119,9 +152,11 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     fontSize: 9,
   },
-  divider: {
-    ...Typography.headlineLg,
-    color: Colors.outlineVariant,
+  vs: {
+    fontFamily: 'Anybody_700Bold',
+    fontSize: 22,
+    color: Colors.gold,
+    letterSpacing: 3,
   },
   target: {
     ...Typography.labelCaps,

@@ -203,7 +203,7 @@ export default function LobbyScreen() {
   if (!currentMatch) {
     return (
       <ScreenWrapper>
-        <LobbyAppBar connectionStatus={connectionStatus} />
+        <LobbyAppBar />
         <View style={styles.center}>
           <Text style={styles.loadingText}>Loading match...</Text>
         </View>
@@ -213,7 +213,7 @@ export default function LobbyScreen() {
 
   return (
     <ScreenWrapper>
-      <LobbyAppBar connectionStatus={connectionStatus} onRefresh={fetchMatchData} />
+      <LobbyAppBar onRefresh={fetchMatchData} />
 
       <ScrollView
         style={styles.scroll}
@@ -330,14 +330,6 @@ export default function LobbyScreen() {
         )}
 
         <View style={styles.footerActions}>
-          <Pressable style={styles.outlineBtn}>
-            <Ionicons
-              name="settings-outline"
-              size={13}
-              color={Colors.secondary}
-            />
-            <Text style={styles.outlineBtnText}>MATCH RULES</Text>
-          </Pressable>
           <Pressable style={styles.outlineBtn} onPress={handleLeaveLobby}>
             <Ionicons name="exit-outline" size={13} color={Colors.secondary} />
             <Text style={styles.outlineBtnText}>LEAVE LOBBY</Text>
@@ -350,13 +342,7 @@ export default function LobbyScreen() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function LobbyAppBar({
-  connectionStatus,
-  onRefresh,
-}: {
-  connectionStatus: string;
-  onRefresh?: () => void;
-}) {
+function LobbyAppBar({ onRefresh }: { onRefresh?: () => void }) {
   return (
     <View style={styles.appBar}>
       <View style={styles.appBarLeft}>
@@ -367,7 +353,6 @@ function LobbyAppBar({
         />
         <Text style={styles.appBarTitle}>CourtScore</Text>
       </View>
-      <SyncIndicator status={connectionStatus as any} />
       <Pressable hitSlop={12} onPress={onRefresh}>
         <Ionicons
           name="refresh-circle-outline"
@@ -413,8 +398,14 @@ function PlayerCard({
         </View>
       </View>
       {isYou ? (
-        <View style={styles.youBadge}>
-          <Text style={styles.youBadgeText}>Ready</Text>
+        <View style={[styles.youBadge, !isReady && styles.youBadgeNotReady]}>
+          <Text
+            style={[
+              styles.youBadgeText,
+              !isReady && styles.youBadgeNotReadyText,
+            ]}>
+            {isReady ? "READY" : "TAP READY"}
+          </Text>
         </View>
       ) : (
         <View style={[styles.statusBadge, isReady && styles.statusBadgeReady]}>
@@ -559,10 +550,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
+  youBadgeNotReady: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: Colors.secondary,
+  },
   youBadgeText: {
     ...Typography.labelCaps,
     color: Colors.charcoal,
     fontSize: 11,
+  },
+  youBadgeNotReadyText: {
+    color: Colors.secondary,
   },
   statusBadge: {
     backgroundColor: Colors.surfaceContainerHigh,

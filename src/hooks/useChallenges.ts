@@ -60,7 +60,7 @@ export async function fetchOutgoingChallenges(
 ): Promise<Challenge[]> {
   const { data, error } = await supabase
     .from('challenges')
-    .select('challenged_id, status')
+    .select('id, challenged_id, status')
     .eq('challenger_id', userId)
     .eq('status', 'pending');
 
@@ -74,7 +74,7 @@ export async function fetchOutgoingChallenges(
 export async function sendChallenge(
   challengerId: string,
   challengedId: string,
-): Promise<string | null> {
+): Promise<{ error: string | null; challengeId?: string }> {
   // Avoid duplicate pending challenges
   const { data: existing } = await supabase
     .from('challenges')
@@ -84,13 +84,16 @@ export async function sendChallenge(
     .eq('status', 'pending')
     .maybeSingle();
 
-  if (existing) return 'Challenge already sent';
+  if (existing) return { error: 'Challenge already sent' };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('challenges')
-    .insert({ challenger_id: challengerId, challenged_id: challengedId });
+    .insert({ challenger_id: challengerId, challenged_id: challengedId })
+    .select('id')
+    .single();
 
-  return error?.message ?? null;
+  if (error || !data) return { error: error?.message ?? 'Failed to send challenge' };
+  return { error: null, challengeId: data.id };
 }
 
 export async function respondChallenge(
@@ -148,11 +151,14 @@ export async function acceptAndCreateMatch(
 
 export async function fetchAcceptedOutgoing(
   userId: string,
+  outgoingChallengeIds: string[],
 ): Promise<{ challengeId: string; matchId: string } | null> {
+  if (outgoingChallengeIds.length === 0) return null;
   const { data } = await supabase
     .from('challenges')
     .select('id, match_id')
     .eq('challenger_id', userId)
+    .in('id', outgoingChallengeIds)
     .eq('status', 'accepted')
     .not('match_id', 'is', null)
     .order('created_at', { ascending: false })
